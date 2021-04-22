@@ -1,0 +1,40 @@
+import numpy as np
+import tensorflow as tf
+
+npz = np.load('Audiobooks_data_train.npz')
+train_inputs = npz['inputs'].astype(np.float)
+train_targets = npz['targets'].astype(np.int)
+npz = np.load('Audiobooks_data_validation.npz')
+validation_inputs, validation_targets = npz['inputs'].astype(np.float), npz['targets'].astype(np.int)
+npz = np.load('Audiobooks_data_test.npz')
+test_inputs, test_targets = npz['inputs'].astype(np.float), npz['targets'].astype(np.int)
+
+#outlining_the_model
+
+input_size = 10
+output_size = 2
+hidden_layer_size = 50
+model = tf.keras.Sequential([
+    tf.keras.layers.Dense(hidden_layer_size, activation='relu'), # 1st hidden layer
+    tf.keras.layers.Dense(hidden_layer_size, activation='relu'), # 2nd hidden layer
+    tf.keras.layers.Dense(output_size, activation='softmax') # output layer
+])
+model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+batch_size = 100
+max_epochs = 100
+early_stopping = tf.keras.callbacks.EarlyStopping(patience=2)
+model.fit(train_inputs, # train inputs
+          train_targets, # train targets
+          batch_size=batch_size, # batch size
+          epochs=max_epochs, # epochs that we will train for (assuming early stopping doesn't kick in)
+          callbacks=[early_stopping], # early stopping
+          validation_data=(validation_inputs, validation_targets), # validation data
+          verbose = 2 # making sure we get enough information about the training process
+          )  
+
+
+
+#testing the model
+
+test_loss, test_accuracy = model.evaluate(test_inputs, test_targets)
+print('\nTest loss: {0:.2f}. Test accuracy: {1:.2f}%'.format(test_loss, test_accuracy*100.))
